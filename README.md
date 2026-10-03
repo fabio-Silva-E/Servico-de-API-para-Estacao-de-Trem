@@ -115,8 +115,4 @@ Todos os endpoints de `/api/train/` exigem autenticação (token JWT no header `
 
 Painel administrativo disponível em `http://127.0.0.1:8000/admin/` (requer superusuário).
 
-## Rodando os testes
 
-```bash
-python manage.py test
-```
