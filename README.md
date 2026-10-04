@@ -126,6 +126,23 @@ A listagem de pedidos é paginada (10 por página, máximo de 100) com `?page=` 
 
 > O limite de requisições (throttling) está em `REST_FRAMEWORK` > `DEFAULT_THROTTLE_RATES` no `settings.py`. O padrão é restritivo (10/dia para anônimos e 30/dia para usuários autenticados); ajuste para desenvolvimento, por exemplo `"anon": "100/hour", "user": "1000/hour"`.
 
+### Documentação da API (Swagger)
+
+A documentação interativa é gerada com `drf-spectacular` e fica disponível com o servidor rodando:
+
+| URL | Descrição |
+|-----|-----------|
+| `http://127.0.0.1:8000/api/doc/swagger/` | Swagger UI (testar os endpoints) |
+| `http://127.0.0.1:8000/api/doc/redoc/` | ReDoc (leitura da documentação) |
+| `http://127.0.0.1:8000/api/schema/` | Schema OpenAPI (JSON/YAML) |
+
+Para testar os endpoints protegidos no Swagger:
+
+1. Chame `POST /api/user/token/` com e-mail e senha e copie o valor de `access`.
+2. Clique em **Authorize** e cole o token.
+
+O token de acesso expira em 5 minutos; gere outro ou use `/api/user/token/refresh/`.
+
 ## Interface web (templates)
 
 Além da API, o projeto tem telas em HTML na pasta `templates/`, separadas por funcionalidade. As páginas são estáticas e consomem a API com JavaScript (`fetch`), autenticando com o JWT guardado no `localStorage`. O token de acesso é renovado automaticamente pelo endpoint de refresh.
