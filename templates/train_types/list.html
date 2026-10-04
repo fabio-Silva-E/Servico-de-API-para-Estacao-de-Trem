@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Tipos de trem - Train Service{% endblock %}
+
+{% block content %}
+<h1>Tipos de trem</h1>
+<table>
+    <thead><tr><th>ID</th><th>Nome</th></tr></thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Novo tipo de trem</h2>
+    <form id="form">
+        <input name="name" placeholder="Nome" required>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/train-types/");
+    document.getElementById("rows").innerHTML = items.map((t) =>
+        `<tr><td>${t.id}</td><td>${esc(t.name)}</td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+setupForm("form", "/train/train-types/", load);
+</script>
+{% endblock %}

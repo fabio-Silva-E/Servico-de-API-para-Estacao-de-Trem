@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Início - Train Service{% endblock %}
+
+{% block content %}
+<h1>Train Service</h1>
+<p>Consulte viagens, escolha seus assentos e acompanhe seus pedidos.</p>
+<ul>
+    <li><a href="/journeys/">Viagens disponíveis</a></li>
+    <li><a href="/orders/">Meus pedidos</a></li>
+    <li><a href="/stations/">Estações</a></li>
+    <li><a href="/routes/">Rotas</a></li>
+    <li><a href="/trains/">Trens</a></li>
+</ul>
+{% endblock %}
+
+{% block extra_js %}
+<script>requireLogin();</script>
+{% endblock %}

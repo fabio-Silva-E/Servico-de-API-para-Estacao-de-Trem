@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Train Service{% endblock %}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; color: #222; }
+        nav { display: flex; gap: 1rem; flex-wrap: wrap; padding: .75rem 1.5rem; background: #1f3a5f; }
+        nav a, nav button { color: #fff; text-decoration: none; background: none; border: 0; font: inherit; cursor: pointer; }
+        main { max-width: 960px; margin: 1.5rem auto; padding: 0 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #ddd; }
+        form { display: flex; flex-direction: column; gap: .5rem; max-width: 380px; }
+        input, select, button { padding: .5rem; font: inherit; }
+        .error { color: #b00020; }
+        .ticket { display: flex; gap: .5rem; margin-bottom: .5rem; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% include "partials/_navbar.html" %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "partials/_api.html" %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

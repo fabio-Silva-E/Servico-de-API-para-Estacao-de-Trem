@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Viagens - Train Service{% endblock %}
+
+{% block content %}
+<h1>Viagens</h1>
+<table>
+    <thead>
+        <tr><th>Rota</th><th>Trem</th><th>Partida</th><th>Chegada</th><th>Lugares livres</th><th></th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Nova viagem</h2>
+    <form id="form">
+        <select name="route" id="route" data-number required></select>
+        <select name="train" id="train" data-number required></select>
+        <label>Tripulação
+            <select name="crew" id="crew" multiple></select>
+        </label>
+        <label>Partida <input name="departure_time" type="datetime-local" required></label>
+        <label>Chegada <input name="arrival_time" type="datetime-local" required></label>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/journeys/");
+    document.getElementById("rows").innerHTML = items.map((j) =>
+        `<tr><td>${esc(j.route)}</td><td>${esc(j.train_name)}</td>` +
+        `<td>${formatDate(j.departure_time)}</td><td>${formatDate(j.arrival_time)}</td>` +
+        `<td>${j.tickets_available} / ${j.train_capacity}</td>` +
+        `<td><a href="/journeys/detail/?id=${j.id}">Detalhes</a></td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+fillSelect("route", "/train/routes/", (r) => r.source + " -> " + r.destination);
+fillSelect("train", "/train/trains/", (t) => t.name);
+fillSelect("crew", "/train/crew/", (c) => c.full_name);
+setupForm("form", "/train/journeys/", load);
+</script>
+{% endblock %}

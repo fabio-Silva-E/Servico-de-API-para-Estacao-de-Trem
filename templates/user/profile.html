@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil - Train Service{% endblock %}
+
+{% block content %}
+<h1>Meu perfil</h1>
+<form id="profile-form">
+    <input name="email" type="email" placeholder="E-mail" required>
+    <input name="password" type="password" minlength="5" placeholder="Nova senha (deixe em branco para manter)">
+    <button type="submit">Salvar</button>
+</form>
+<p id="error" class="error"></p>
+<p id="success"></p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+const form = document.getElementById("profile-form");
+
+async function load() {
+    const me = await getMe();
+    if (me) form.email.value = me.email;
+}
+
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const body = { email: form.email.value };
+    if (form.password.value) body.password = form.password.value;
+    const res = await api("/user/me/", { method: "PATCH", body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    document.getElementById("error").textContent = res.ok ? "" : errorText(data);
+    document.getElementById("success").textContent = res.ok ? "Perfil atualizado." : "";
+    if (res.ok) form.password.value = "";
+});
+
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Rotas - Train Service{% endblock %}
+
+{% block content %}
+<h1>Rotas</h1>
+<table>
+    <thead><tr><th>ID</th><th>Origem</th><th>Destino</th><th>Distância</th></tr></thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Nova rota</h2>
+    <form id="form">
+        <select name="source" id="source" data-number required></select>
+        <select name="destination" id="destination" data-number required></select>
+        <input name="distance" type="number" min="1" placeholder="Distância" required>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/routes/");
+    document.getElementById("rows").innerHTML = items.map((r) =>
+        `<tr><td>${r.id}</td><td>${esc(r.source)}</td><td>${esc(r.destination)}</td><td>${r.distance}</td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+fillSelect("source", "/train/stations/", (s) => s.name);
+fillSelect("destination", "/train/stations/", (s) => s.name);
+setupForm("form", "/train/routes/", load);
+</script>
+{% endblock %}

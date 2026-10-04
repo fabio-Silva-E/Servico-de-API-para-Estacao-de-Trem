@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Equipes - Train Service{% endblock %}
+
+{% block content %}
+<h1>Equipes</h1>
+<table>
+    <thead><tr><th>ID</th><th>Nome completo</th></tr></thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Novo tripulante</h2>
+    <form id="form">
+        <input name="first_name" placeholder="Nome" required>
+        <input name="last_name" placeholder="Sobrenome" required>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/crew/");
+    document.getElementById("rows").innerHTML = items.map((c) =>
+        `<tr><td>${c.id}</td><td>${esc(c.full_name)}</td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+setupForm("form", "/train/crew/", load);
+</script>
+{% endblock %}
