@@ -153,11 +153,9 @@ class Ticket(models.Model):
             self.cargo, self.seat, self.journey.train, ValidationError
         )
 
-    def save(self, *args, force_insert=False, force_update=False, using=None, update_fields=None, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
-        return super().save(
-            force_insert, force_update, using=using, update_fields=update_fields, **kwargs
-        )
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.journey} - cargo {self.cargo}, seat {self.seat}"
