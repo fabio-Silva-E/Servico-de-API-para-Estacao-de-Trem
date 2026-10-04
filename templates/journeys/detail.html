@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da viagem - Train Service{% endblock %}
+
+{% block content %}
+<p><a href="/journeys/">&larr; Voltar às viagens</a></p>
+<h1 id="title">Viagem</h1>
+<p id="error" class="error"></p>
+<dl id="info"></dl>
+
+<h2>Tripulação</h2>
+<ul id="crew"></ul>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const id = new URLSearchParams(location.search).get("id");
+    const error = document.getElementById("error");
+    if (!id) {
+        error.textContent = "Viagem não informada.";
+        return;
+    }
+    const res = await api(`/train/journeys/${encodeURIComponent(id)}/`);
+    if (!res.ok) {
+        error.textContent = "Viagem não encontrada.";
+        return;
+    }
+    const j = await res.json();
+    document.getElementById("title").textContent = `${j.route.source.name} -> ${j.route.destination.name}`;
+    document.getElementById("info").innerHTML =
+        `<dt>Distância</dt><dd>${j.route.distance}</dd>` +
+        `<dt>Trem</dt><dd>${esc(j.train.name)} (${esc(j.train.train_type.name)})</dd>` +
+        `<dt>Capacidade</dt><dd>${j.train.cargo_num} vagões x ${j.train.places_in_cargo} lugares = ${j.train.capacity}</dd>` +
+        `<dt>Partida</dt><dd>${formatDate(j.departure_time)}</dd>` +
+        `<dt>Chegada</dt><dd>${formatDate(j.arrival_time)}</dd>`;
+    document.getElementById("crew").innerHTML = j.crew.length
+        ? j.crew.map((c) => `<li>${esc(c.full_name)}</li>`).join("")
+        : "<li>Nenhum tripulante escalado.</li>";
+}
+
+load();
+</script>
+{% endblock %}

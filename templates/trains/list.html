@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Trens - Train Service{% endblock %}
+
+{% block content %}
+<h1>Trens</h1>
+<table>
+    <thead>
+        <tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Vagões</th><th>Lugares por vagão</th><th>Capacidade</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Novo trem</h2>
+    <form id="form">
+        <input name="name" placeholder="Nome" required>
+        <input name="cargo_num" type="number" min="1" placeholder="Número de vagões" required>
+        <input name="places_in_cargo" type="number" min="1" placeholder="Lugares por vagão" required>
+        <select name="train_type" id="train_type" data-number required></select>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/trains/");
+    document.getElementById("rows").innerHTML = items.map((t) =>
+        `<tr><td>${t.id}</td><td>${esc(t.name)}</td><td>${esc(t.train_type)}</td>` +
+        `<td>${t.cargo_num}</td><td>${t.places_in_cargo}</td><td>${t.capacity}</td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+fillSelect("train_type", "/train/train-types/", (t) => t.name);
+setupForm("form", "/train/trains/", load);
+</script>
+{% endblock %}

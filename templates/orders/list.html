@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos - Train Service{% endblock %}
+
+{% block content %}
+<h1>Meus pedidos</h1>
+<table>
+    <thead><tr><th>Pedido</th><th>Data</th><th>Tickets</th></tr></thead>
+    <tbody id="rows"></tbody>
+</table>
+<p>
+    <button type="button" id="prev">Anterior</button>
+    <span id="page-info"></span>
+    <button type="button" id="next">Próxima</button>
+</p>
+
+<h2>Novo pedido</h2>
+<form id="order-form">
+    <div id="tickets"></div>
+    <button type="button" id="add-ticket">Adicionar ticket</button>
+    <button type="submit">Finalizar pedido</button>
+</form>
+<p id="error" class="error"></p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+let page = 1;
+let journeyOptions = "";
+
+async function load() {
+    const res = await api(`/train/orders/?page=${page}`);
+    const data = await res.json();
+    document.getElementById("rows").innerHTML = data.results.map((o) =>
+        `<tr><td>#${o.id}</td><td>${formatDate(o.created_at)}</td><td>` +
+        o.tickets.map((t) =>
+            `${esc(t.journey.route)} (${formatDate(t.journey.departure_time)}) - vagão ${t.cargo}, assento ${t.seat}`
+        ).join("<br>") + "</td></tr>"
+    ).join("");
+    document.getElementById("page-info").textContent = `Página ${page} (${data.count} pedidos)`;
+    document.getElementById("prev").disabled = !data.previous;
+    document.getElementById("next").disabled = !data.next;
+}
+
+document.getElementById("prev").onclick = () => { page--; load(); };
+document.getElementById("next").onclick = () => { page++; load(); };
+
+function addTicketRow() {
+    const row = document.createElement("div");
+    row.className = "ticket";
+    row.innerHTML =
+        `<select class="journey">${journeyOptions}</select>` +
+        `<input class="cargo" type="number" min="1" placeholder="Vagão" required>` +
+        `<input class="seat" type="number" min="1" placeholder="Assento" required>` +
+        `<button type="button" class="remove">Remover</button>`;
+    row.querySelector(".remove").onclick = () => row.remove();
+    document.getElementById("tickets").appendChild(row);
+}
+
+async function loadJourneys() {
+    const journeys = await fetchList("/train/journeys/");
+    journeyOptions = journeys.map((j) =>
+        `<option value="${j.id}">${esc(j.route)} - ${formatDate(j.departure_time)}</option>`
+    ).join("");
+    addTicketRow();
+}
+
+document.getElementById("add-ticket").onclick = addTicketRow;
+
+document.getElementById("order-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = document.getElementById("error");
+    error.textContent = "";
+    const tickets = [...document.querySelectorAll("#tickets .ticket")].map((row) => ({
+        journey: Number(row.querySelector(".journey").value),
+        cargo: Number(row.querySelector(".cargo").value),
+        seat: Number(row.querySelector(".seat").value),
+    }));
+    const res = await api("/train/orders/", { method: "POST", body: JSON.stringify({ tickets }) });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+        document.getElementById("tickets").innerHTML = "";
+        addTicketRow();
+        page = 1;
+        load();
+    } else {
+        error.textContent = errorText(data);
+    }
+});
+
+load();
+loadJourneys();
+</script>
+{% endblock %}

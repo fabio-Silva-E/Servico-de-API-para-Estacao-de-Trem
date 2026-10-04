@@ -1,0 +1,126 @@
+<script>
+const API = "/api";
+const LOGIN_URL = "/login/";
+
+function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (c) => (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+}
+
+function clearTokens() {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+}
+
+function logout() {
+    clearTokens();
+    location.href = LOGIN_URL;
+}
+
+function requireLogin() {
+    if (!localStorage.getItem("refresh")) location.href = LOGIN_URL;
+}
+
+async function refreshToken() {
+    const refresh = localStorage.getItem("refresh");
+    if (!refresh) return false;
+    const res = await fetch(API + "/user/token/refresh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
+    });
+    if (!res.ok) {
+        clearTokens();
+        return false;
+    }
+    const data = await res.json();
+    localStorage.setItem("access", data.access);
+    if (data.refresh) localStorage.setItem("refresh", data.refresh);
+    return true;
+}
+
+// Chamada à API com o token JWT; renova o token automaticamente se expirar.
+async function api(path, options = {}, retry = true) {
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    const access = localStorage.getItem("access");
+    if (access) headers.Authorization = "Bearer " + access;
+    const res = await fetch(API + path, { ...options, headers });
+    if (res.status === 401 && retry) {
+        if (await refreshToken()) return api(path, options, false);
+        location.href = LOGIN_URL;
+    }
+    return res;
+}
+
+// Retorna sempre uma lista (trata respostas paginadas e não paginadas).
+async function fetchList(path) {
+    const res = await api(path);
+    const data = await res.json();
+    return Array.isArray(data) ? data : data.results || [];
+}
+
+async function getMe() {
+    const res = await api("/user/me/");
+    return res.ok ? res.json() : null;
+}
+
+// Mostra o elemento apenas para usuários staff (criação é restrita a admin).
+async function showIfStaff(id) {
+    const me = await getMe();
+    if (me && me.is_staff) document.getElementById(id).hidden = false;
+}
+
+function errorText(data) {
+    if (typeof data === "string") return data;
+    return Object.entries(data || {})
+        .map(([key, value]) => key + ": " + [].concat(value).join(" "))
+        .join(" | ");
+}
+
+function formToJson(form) {
+    const body = {};
+    for (const el of form.elements) {
+        if (!el.name) continue;
+        if (el.type === "select-multiple") {
+            body[el.name] = [...el.selectedOptions].map((o) => Number(o.value));
+        } else if (el.type === "number" || el.dataset.number !== undefined) {
+            body[el.name] = Number(el.value);
+        } else if (el.type === "datetime-local") {
+            body[el.name] = new Date(el.value).toISOString();
+        } else {
+            body[el.name] = el.value;
+        }
+    }
+    return body;
+}
+
+// Envia o formulário como JSON (POST) e mostra erros no elemento #error.
+function setupForm(formId, path, onSuccess) {
+    const form = document.getElementById(formId);
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const error = document.getElementById("error");
+        error.textContent = "";
+        const res = await api(path, { method: "POST", body: JSON.stringify(formToJson(form)) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            form.reset();
+            onSuccess(data);
+        } else {
+            error.textContent = errorText(data);
+        }
+    });
+}
+
+async function fillSelect(id, path, label) {
+    const items = await fetchList(path);
+    document.getElementById(id).innerHTML = items
+        .map((item) => `<option value="${item.id}">${esc(label(item))}</option>`)
+        .join("");
+}
+
+function formatDate(value) {
+    return new Date(value).toLocaleString("pt-BR");
+}
+</script>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Estações - Train Service{% endblock %}
+
+{% block content %}
+<h1>Estações</h1>
+<table>
+    <thead><tr><th>ID</th><th>Nome</th><th>Latitude</th><th>Longitude</th></tr></thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<section id="admin-form" hidden>
+    <h2>Nova estação</h2>
+    <form id="form">
+        <input name="name" placeholder="Nome" required>
+        <input name="latitude" type="number" step="any" placeholder="Latitude" required>
+        <input name="longitude" type="number" step="any" placeholder="Longitude" required>
+        <button type="submit">Salvar</button>
+    </form>
+    <p id="error" class="error"></p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+requireLogin();
+
+async function load() {
+    const items = await fetchList("/train/stations/");
+    document.getElementById("rows").innerHTML = items.map((s) =>
+        `<tr><td>${s.id}</td><td>${esc(s.name)}</td><td>${s.latitude}</td><td>${s.longitude}</td></tr>`
+    ).join("");
+}
+
+load();
+showIfStaff("admin-form");
+setupForm("form", "/train/stations/", load);
+</script>
+{% endblock %}
